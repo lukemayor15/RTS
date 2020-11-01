@@ -1,6 +1,6 @@
 # RTS
 
-Developed with Unreal Engine 4
+Developed with Unreal Engine 4.25.1
 
 This project is currently in development and there are some know issues.
 1. The current method of checking if a building can be placed uses on overlap begin and end. therefore, if the mouse moves to quickly the on-collision overlap begin/end is not trigger.
