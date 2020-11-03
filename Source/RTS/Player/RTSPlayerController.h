@@ -22,24 +22,26 @@ protected:
 	ARTSPlayerController();
 
 public:
-
+	//array that the units that are selected
 	UPROPERTY(BlueprintReadOnly)
-		TArray<AUnit*> UnitList;
+	TArray<AUnit*> UnitList;
+	//array that holds the units that are selected by the selection rect, then is checked again the UnitList for changes,
 	UPROPERTY(BlueprintReadOnly)
-		TArray<AUnit*> SelectList;
-
+	TArray<AUnit*> SelectList;
+	//an Object array to determine which objects can be selected
 	UPROPERTY(BlueprintReadOnly)
-		TArray< TEnumAsByte<EObjectTypeQuery> > ObjectTypes;
+	TArray< TEnumAsByte<EObjectTypeQuery> > ObjectTypes;
 
+	//first mouse poisiton used in drawing the selection rect
 	UPROPERTY(BlueprintReadOnly)
 		FVector2D FirstMousePos;
-
+	//second mouse poisiton used in drawing the selection rect
 	UPROPERTY(BlueprintReadOnly)
-		FVector2D SecondMousePos;
-
+	FVector2D SecondMousePos;
+	//array that holds the buildings that are selected
 	UPROPERTY(BlueprintReadWrite)
-		TArray<ABaseBuilding*> BuildingList;
-
+	TArray<ABaseBuilding*> BuildingList;
+	//The player resoruce varaibles
 	UPROPERTY(BlueprintReadOnly)
 		int32 Gold;
 	UPROPERTY(BlueprintReadOnly)

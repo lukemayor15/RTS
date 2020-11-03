@@ -8,6 +8,8 @@
 #include "RTS\Hud\RTSHud.h"
 #include "RTS\UserWidgets\CameraControl.h"
 
+
+//Use to check if it is overlapping the required resouce type
 bool AGoldMine::CheckResourceType(TArray<AActor*>  OtherActor)
 {
 	if (OtherActor.Num() >= 0)
@@ -28,7 +30,7 @@ bool AGoldMine::CheckResourceType(TArray<AActor*>  OtherActor)
 			{
 
 
-				UE_LOG(LogTemp, Warning, TEXT("me nice"));
+				UE_LOG(LogTemp, Warning, TEXT("Can Build"));
 				return true;
 
 			}
@@ -36,11 +38,14 @@ bool AGoldMine::CheckResourceType(TArray<AActor*>  OtherActor)
 	}
 	return false;
 }
+
+//Resource Increase Amount
 void AGoldMine::SetResourceIncreaseAmount()
 {
 	ResourceIncreaseAmount = 12;
 }
 
+// adds and updates the user resoruce amount
 void AGoldMine::AddResource()
 {
 	PlayerAsPawn->CurrentController->Gold += ResourceIncreaseAmount;
@@ -50,6 +55,7 @@ void AGoldMine::AddResource()
 
 }
 
+// set teh initial start values
 void AGoldMine::SetStartValues()
 {
 	WoodCost = 100;

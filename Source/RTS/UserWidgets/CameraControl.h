@@ -123,6 +123,8 @@ public:
         void StopMove();
 
 private:
+
+    //sub clas of userwidget
     UPROPERTY(EditAnywhere, Category = "Hud")
         TSubclassOf<class UUserWidget> HUDWidgetClass;
 

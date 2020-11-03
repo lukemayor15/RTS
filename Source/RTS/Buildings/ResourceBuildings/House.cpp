@@ -7,6 +7,7 @@
 #include "RTS\Hud\RTSHud.h"
 #include "RTS\UserWidgets\CameraControl.h"
 
+//Set the inital start values
 void AHouse::SetStartValues()
 {
 	WoodCost = 100;
@@ -19,11 +20,13 @@ void AHouse::SetStartValues()
 	IncreaseDone = false;
 }
 
+//INcrease amount
 void AHouse::SetResourceIncreaseAmount()
 {
 	ResourceIncreaseAmount = 4;
 }
 
+//adds resource once and update the player controller and UI of the change
 void AHouse::AddResource()
 {
 	if (!IncreaseDone)

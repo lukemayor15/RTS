@@ -13,8 +13,12 @@ UCLASS()
 class RTS_API AQuarry : public ABaseResourceBuilding
 {
 	GENERATED_BODY()
-		virtual bool CheckResourceType(TArray<AActor*>  OtherActor) override;
+	//Function to check the overlapping actor is of the correct resource type
+	virtual bool CheckResourceType(TArray<AActor*>  OtherActor) override;
+	//adds resource
 	virtual void AddResource() override;
+	//Sets the resource increase amount
 	virtual void SetResourceIncreaseAmount() override;
+	//set the start values
 	virtual void SetStartValues() override;
 };

@@ -10,6 +10,7 @@
 
 bool ASawMill::CheckResourceType(TArray<AActor*>  OtherActor)
 {
+	//if no other actors overlapiing 
 	if (OtherActor.Num() >= 0)
 	{
 		for (int i = 0; i != OtherActor.Num(); i++)
@@ -28,7 +29,7 @@ bool ASawMill::CheckResourceType(TArray<AActor*>  OtherActor)
 			{
 
 
-				UE_LOG(LogTemp, Warning, TEXT("me nice"));
+				UE_LOG(LogTemp, Warning, TEXT("Can Build"));
 				return true;
 
 			}
@@ -36,11 +37,12 @@ bool ASawMill::CheckResourceType(TArray<AActor*>  OtherActor)
 	}
 	return false;
 }
+//sets the resouce increase amount
 void ASawMill::SetResourceIncreaseAmount()
 {
 	ResourceIncreaseAmount = 10;
 }
-
+//is call on a timer, this adds and update the resouce amount in the player controller and UI
 void ASawMill::AddResource()
 {
 	PlayerAsPawn->CurrentController->Wood += ResourceIncreaseAmount;
@@ -50,7 +52,7 @@ void ASawMill::AddResource()
 	IncreaseDone = true;
 
 }
-
+//set the initail start values
 void ASawMill::SetStartValues()
 {
 	WoodCost = 0;

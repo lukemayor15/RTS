@@ -50,6 +50,7 @@ float AUnit::GetRotationInput()
 {
 	return YawInput;
 }
+//calulates the rotation impact,(rotated i the move direction)
 float AUnit::ConsumeRotationInput(float DeltaTime)
 {
 	float RetVal = YawInput;
@@ -59,15 +60,18 @@ float AUnit::ConsumeRotationInput(float DeltaTime)
 	YawInput = 0.0f;
 	return RetVal;
 }
+//the rortation input
 void AUnit::AddRotationInput(float DeltaYawDegrees)
 {
 	YawInput += DeltaYawDegrees;
 }
 
+//implmented in blueprints for animation
 void AUnit::IdleAnimation_Implementation()
 {
 
 }
+//implmented in blueprints for animation
 
 void AUnit::MoveAnimation_Implementation()
 {

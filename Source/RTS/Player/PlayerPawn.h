@@ -41,18 +41,19 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	//Cheeck which button is over.
+	//Cheeck which button is hoverd.
 	UPROPERTY(BlueprintReadOnly)
 	uint32 ButtonHoveredX : 1;
 	uint32 ButtonHoveredY : 1;
+	//bool used to check if we are selecting units and should draw the selection hud
 	uint32 MultiSelect : 1;
+	//bool to check if the player is currently building
 	UPROPERTY(BlueprintReadWrite)
-		uint32 isBuilding : 1;
-	UPROPERTY(BlueprintReadWrite)
-		uint32 BuildingSelected : 1;
-	//values set incameracontroller
+	uint32 isBuilding : 1;
+	
+	//values set in cameracontroller, used to move player
 	UPROPERTY(BlueprintReadOnly)
-		float AxisValueButtonX;
+	float AxisValueButtonX;
 	float AxisValueButtonY;
 
 
@@ -79,17 +80,19 @@ public:
 	void RightClickActions();
 	//Move select unit to location on tight mouse button
 	void MoveUnit();
-
+	//on left mouse clicked this function is called to decide what to do
 	void Select();
 	//empty the array of player units, called on miss hit
 	void ClearUnitsList();
+	//empty the array of player buildings, called on miss hit
 	void ClearBuildingsList();
-	//check if 
+	//check if left mouse button is released for selection rect
 	void ReleasedLeftMouseButton();
 	//get mouse pos
 	UFUNCTION(BlueprintCallable)
 		FVector GetMousePos();
 
+	//used to minus the players resoucres when spent
 	void MinusCost(int Gold, int Food, int Wood, int Stone);
 
 

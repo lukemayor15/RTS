@@ -8,6 +8,7 @@
 ABarracks::ABarracks()
 {
 	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	//Set theHudwidget class to equal teh vbarracks widget
 	ConstructorHelpers::FClassFinder<UUserWidget> HudClass(TEXT("/Game/UserWidgets/BuildingHud/Barracks"));
 	if (HudClass.Class)
 	{
@@ -17,6 +18,7 @@ ABarracks::ABarracks()
 	
 }
 
+//set the inital start values
 void ABarracks::SetStartValues()
 {
 	

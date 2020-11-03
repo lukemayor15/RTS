@@ -27,45 +27,48 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-
+	//pointer to staticmeshcomponet
 	UPROPERTY(EditAnywhere)
 		UStaticMeshComponent* StaticMesh;
 
+	//selected bool
 	UPROPERTY(BlueprintReadOnly)
-		uint32 Selected : 1;
-
+	uint32 Selected : 1;
+	//isMOving Bool
 	UPROPERTY(BlueprintReadOnly)
-		uint32 IsMoving : 1;
-
+	uint32 IsMoving : 1;
+	//Move target Fvector
 	UPROPERTY(BlueprintReadOnly)
-		FVector MoveTarget;
-
+	FVector MoveTarget;
+	//Yawinput
 	UPROPERTY(BlueprintReadWrite)
-		float YawInput;
-
+	float YawInput;
+	//pointer to UnitController
 	UPROPERTY(BlueprintReadOnly)
-		class AUnitController* CurrentController;
+	class AUnitController* CurrentController;
 
 
-	//add rotation input
+	//Get rotation input
 	UFUNCTION(BlueprintCallable, Category = "Pawm|Input", meta = (Keywords = "ConsumeInput"))
 		virtual float GetRotationInput();
 	//clear rotatino or would update
 	UFUNCTION(BlueprintCallable, Category = "Pawm|Input", meta = (Keywords = "ConsumeInput"))
 		virtual float ConsumeRotationInput(float DeltaTime);
-
+	//add rotation input
 	UFUNCTION(BlueprintCallable, Category = "Pawm|Input", meta = (Keywords = "AddInput"))
 		virtual void AddRotationInput(float DeltaYawDegrees);
 
+	//Bluepprint implemented  function for idel animation
 	UFUNCTION(BlueprintNativeEvent)
 	void IdleAnimation();
-
+	//Bluepprint implemented  function for move animation
 	UFUNCTION(BlueprintNativeEvent)
 	void MoveAnimation();
 protected:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Zombie", meta = (CampMin = "0.0"))
+	//Yaw speed
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Unit", meta = (CampMin = "0.0"))
 		float YawSpeed;
-
+	//MovementSpeed
 	UPROPERTY(BlueprintReadWrite)
 		float MovementSpeed;
 };

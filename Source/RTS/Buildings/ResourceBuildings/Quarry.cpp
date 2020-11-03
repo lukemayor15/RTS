@@ -8,6 +8,7 @@
 #include "RTS\Hud\RTSHud.h"
 #include "RTS\UserWidgets\CameraControl.h"
 
+//Check if we are overllaping the correct resource actor
 bool AQuarry::CheckResourceType(TArray<AActor*> OtherActor)
 {
 	if (OtherActor.Num() >= 0)
@@ -29,7 +30,7 @@ bool AQuarry::CheckResourceType(TArray<AActor*> OtherActor)
 			{
 
 
-				UE_LOG(LogTemp, Warning, TEXT("me nice"));
+				UE_LOG(LogTemp, Warning, TEXT("Can Build"));
 				return true;
 
 			}
@@ -40,11 +41,13 @@ bool AQuarry::CheckResourceType(TArray<AActor*> OtherActor)
 
 }
 
+//the resource increase amount added 
 void AQuarry::SetResourceIncreaseAmount()
 {
 	ResourceIncreaseAmount = 8;
 }
 
+//is call on a timer, this adds and update the resouce amount in the player controller and UI
 void AQuarry::AddResource()
 {
 	PlayerAsPawn->CurrentController->Stone += ResourceIncreaseAmount;
@@ -55,6 +58,7 @@ void AQuarry::AddResource()
 
 }
 
+//Set the initial start values
 void AQuarry::SetStartValues()
 {
 	WoodCost = 150;

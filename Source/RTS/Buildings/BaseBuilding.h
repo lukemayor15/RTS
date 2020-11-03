@@ -22,13 +22,13 @@ public:
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
+	
 	TSubclassOf<class UUserWidget> HUDWidgetClass;
 	
 
 	UPROPERTY(BlueprintReadOnly)
 	class APlayerPawn* PlayerAsPawn;
-
+	//bools to determine, if is placed, CanBePlaced,is  selected
 	UPROPERTY(BlueprintReadWrite)
 	uint32 IsPlaced : 1;
 	UPROPERTY(BlueprintReadWrite)
@@ -37,24 +37,21 @@ public:
 	uint32 Selected : 1;
 
 	
-
+	//Box compnonet pointer
 	UPROPERTY(VisibleAnywhere, Category = "Switch Components")
 	class UBoxComponent* BoxCollision;
-
+	//static mesh pointer
 	UPROPERTY(VisibleAnywhere, Category = "Static Mesh")
 	class UStaticMeshComponent* StaticMesh;
 
-
+	// Unit pointer
 	UPROPERTY(BlueprintReadWrite, Category = "Switch Components")
 	class AUnit* TestUnit;
-
+	//Widget pointer
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = HUD)
 	class UWidget* Widget;
+	//
 
-	UPROPERTY(BlueprintReadWrite)
-	int32 Health;
-	UPROPERTY(BlueprintReadWrite)
-	int32 MaxHealth;
 	/** called when something enters the boxomponent */
 	UFUNCTION()
 	virtual void OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
@@ -64,16 +61,20 @@ public:
 	virtual void OnOverlapEnd(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 	UFUNCTION()
 	virtual void OnSelected(AActor* Target, FKey ButtonPressed);
-
+	// use to set the intial start values
 	UFUNCTION()
 	virtual void SetStartValues();
-
+	//function to add buildings to player controler building list
 	UFUNCTION()
 	void AddToList();
 
 	/* Handle to manage the timer */
 	FTimerHandle MemberTimerHandle;
-
+	//Standard Values
+	UPROPERTY(BlueprintReadWrite)
+	int32 Health;
+	UPROPERTY(BlueprintReadWrite)
+	int32 MaxHealth;
 	UPROPERTY(BlueprintReadWrite, Category = "Cost")
 	int WoodCost;
 	UPROPERTY(BlueprintReadWrite, Category = "Cost")
@@ -82,9 +83,10 @@ public:
 	int FoodCost;
 	UPROPERTY(BlueprintReadWrite, Category = "Cost")
 	int StoneCost;
-
 	UPROPERTY(BlueprintReadWrite, Category = "Name")
 	FString BuildingName;
+
+	//Blueprint callable function to get the Overlaped actors
 	UFUNCTION(Blueprintcallable)
 	virtual void GetOverlapedActors();
 protected:

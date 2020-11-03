@@ -22,29 +22,34 @@ public:
 
 	virtual void BeginPlay() override;
 
+	//Function that is called to draw the selection box
 	void  DrawSelectionBox(TArray<AUnit*> UnitList, FVector2D FirstMousePos, FVector2D SecondMousePos);
 
+	//Are we Drawing the selection Box
 	void IsDrawing();
+	//Rest values once we stoped drawings
 	void Reset();
 
+	//Bool to check if we are drawing the selection box
 	UPROPERTY(EditAnywhere)
 		uint32 Drawing : 1;
-
+	//How many units are selected
 	UPROPERTY(EditAnywhere)
 		int UnitCount;
+	//pointer to RTSPlayerController
 	UPROPERTY(BlueprintReadOnly)
 		class ARTSPlayerController* CurrentController;
-
+	//Pointer to PlayerPawn
 	UPROPERTY(BlueprintReadOnly)
 		class APlayerPawn* PlayerPawn;
-
+	//Pointer to CameraControl widget
 	UPROPERTY(EditAnywhere, Category = "Move")
 		class UCameraControl* CurrentWidget;
 
 
 
 private:
-
+	//Use to get blueprint class
 	UPROPERTY(EditAnywhere, Category = "Move")
 		TSubclassOf<class UUserWidget> HUDWidgetClass;
 

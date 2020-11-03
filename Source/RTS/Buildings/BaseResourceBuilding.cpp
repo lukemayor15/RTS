@@ -34,7 +34,7 @@ void ABaseResourceBuilding::BeginPlay()
 	BoxCollision->OnComponentEndOverlap.AddDynamic(this, &ABaseBuilding::OnOverlapEnd);       // set up a notification for when this component overlaps something
 	OnClicked.AddDynamic(this, &ABaseBuilding::OnSelected);
 
-	StaticMesh->GetBodyInstance()->bUseCCD = true;
+	BoxCollision->GetBodyInstance()->bUseCCD = true;
 	IncreaseTime = 10.0f;
 	SetResourceIncreaseAmount();
 	GetOverlapedActors();

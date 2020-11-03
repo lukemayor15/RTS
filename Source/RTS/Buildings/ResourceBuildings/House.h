@@ -13,8 +13,11 @@ UCLASS()
 class RTS_API AHouse : public ABaseResourceBuilding
 {
 	GENERATED_BODY()
+	//Adds the resoruce to the player controller and update UI
 	virtual void AddResource() override;
+	//Set the resouce increase amount
 	virtual void SetResourceIncreaseAmount() override;
+	//set the initial start values of this buildings
 	virtual void SetStartValues() override;
 
 
