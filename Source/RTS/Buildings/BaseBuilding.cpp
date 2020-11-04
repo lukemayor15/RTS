@@ -29,22 +29,6 @@ ABaseBuilding::ABaseBuilding()
 	RootComponent = BoxCollision;
 }
 
-//Called when a compoment overlap begins
-void ABaseBuilding::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
-{
-		//check to see if we still overlapping another compoment 
-
-	GetOverlapedActors();
-}
-//Called when a compoment  overlap ends 
-void ABaseBuilding::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
-{
-	//check to see if we still overlapping another compoment 
-	GetOverlapedActors();
-
-
-}
-
 //Decide if we placing or selecting the building
 void ABaseBuilding::OnSelected(AActor* Target, FKey ButtonPressed)
 {
@@ -102,17 +86,11 @@ void ABaseBuilding::AddToList()
 void ABaseBuilding::BeginPlay()
 {
 	Super::BeginPlay();
-
-	
 	PlayerAsPawn = static_cast<APlayerPawn*>(GetWorld()->GetFirstPlayerController()->GetPawn());
 	IsPlaced = false;
 	Selected = false;
 	CanBePlaced = false;
-	BoxCollision->GetGenerateOverlapEvents();
-	BoxCollision->OnComponentBeginOverlap.AddDynamic(this, &ABaseBuilding::OnOverlapBegin);	  // set up a notification for when this component overlaps something
-	BoxCollision->OnComponentEndOverlap.AddDynamic(this, &ABaseBuilding::OnOverlapEnd);       // set up a notification for when this component overlaps something
 	OnClicked.AddDynamic(this, &ABaseBuilding::OnSelected);									  //set up a Oncliked to call the OnSelected function to determine if building or slected
-
 	GetOverlapedActors();
 	SetStartValues();
 }
@@ -124,6 +102,7 @@ void ABaseBuilding::Tick(float DeltaTime)
 	if (!IsPlaced)
 	{
 		SetActorLocation(PlayerAsPawn->GetMousePos());
+		GetOverlapedActors();
 	}
 }
 

@@ -29,7 +29,8 @@ public:
 
 	//pointer to staticmeshcomponet
 	UPROPERTY(EditAnywhere)
-		UStaticMeshComponent* StaticMesh;
+	UStaticMeshComponent* StaticMesh;
+
 
 	//selected bool
 	UPROPERTY(BlueprintReadOnly)
@@ -58,6 +59,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Pawm|Input", meta = (Keywords = "AddInput"))
 		virtual void AddRotationInput(float DeltaYawDegrees);
 
+	
 	//Bluepprint implemented  function for idel animation
 	UFUNCTION(BlueprintNativeEvent)
 	void IdleAnimation();

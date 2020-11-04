@@ -4,11 +4,38 @@
 #include "UnitController.h"
 #include "Unit.h"
 #include "NavMesh/NavMeshBoundsVolume.h"
+#include "Navigation/CrowdFollowingComponent.h"
 
 
+
+
+AUnitController::AUnitController()
+{
+	CrowdComponent = CreateDefaultSubobject<UCrowdFollowingComponent>(TEXT("CrowdFollowingComponent"));
+
+	CrowdComponent->SetCrowdSimulationState(ECrowdSimulationState::Enabled);
+	CrowdComponent->SetCrowdAffectFallingVelocity(false);
+	CrowdComponent->SetCrowdRotateToVelocity(true);
+	CrowdComponent->SetCrowdAnticipateTurns(true);
+	CrowdComponent->SetCrowdObstacleAvoidance(true);
+	CrowdComponent->SetCrowdSeparation(true);
+	CrowdComponent->SetCrowdOptimizeVisibility(true);
+	CrowdComponent->SetCrowdOptimizeTopology(true);
+	CrowdComponent->SetCrowdPathOffset(false);
+	CrowdComponent->SetCrowdSlowdownAtGoal(true);
+
+	CrowdComponent->SetCrowdSeparationWeight(200.0f);
+	CrowdComponent->SetCrowdCollisionQueryRange(1000.0f);
+	CrowdComponent->SetCrowdPathOptimizationRange(1000.0f);
+	CrowdComponent->SetCrowdAvoidanceQuality(ECrowdAvoidanceQuality::High);
+	CrowdComponent->SetCrowdAvoidanceRangeMultiplier(1.0f);
+
+	
+}
 void AUnitController::BeginPlay()
 {
 	Super::BeginPlay();
+	MoveToStarted = false;
 }
 
 //Tick Function
@@ -20,19 +47,16 @@ void AUnitController::Tick(float DeltaTime)
 		//Check is pawn is Moving
 		if (PawnAsUnit->IsMoving)
 		{
-			
 			//Have we reach the move target
 			if (PawnAsUnit->MoveTarget != PawnAsUnit->GetActorLocation())
 			{
 				//set the unit animation move
 				PawnAsUnit->MoveAnimation();
 				//Move unit to move target
-				MoveToLocation(PawnAsUnit->MoveTarget,0.0f, false, true, true, false);
-				//Keep the unit z position to 0
-				FVector HeightChanger = PawnAsUnit->GetActorLocation();
-				HeightChanger.Z = 0;
-				PawnAsUnit->SetActorLocation(HeightChanger);
-
+				if (MoveToStarted == false || PreMoveTarget != PawnAsUnit->MoveTarget)
+				{
+					CallMoveTo();
+				}
 				//Get direction to target
 				FVector DirectionToTarget = (PawnAsUnit->MoveTarget - PawnAsUnit->GetActorLocation());
 				//sdie wats dot produicts
@@ -47,7 +71,7 @@ void AUnitController::Tick(float DeltaTime)
 			{
 				PawnAsUnit->IdleAnimation();
 				PawnAsUnit->IsMoving = false;
-				
+				MoveToStarted = false;
 			}
 
 			
@@ -67,4 +91,16 @@ void AUnitController::OnUnPossess()
 {
 	Super::OnUnPossess();
 	PawnAsUnit = nullptr;
+}
+
+void AUnitController::CallMoveTo()
+{
+	if (PawnAsUnit != nullptr)
+	{
+		MoveToLocation(PawnAsUnit->MoveTarget, 20.0f, false, true, true, false,0,false);
+		MoveToStarted = true;
+	}
+
+	PreMoveTarget = PawnAsUnit->MoveTarget;
+
 }

@@ -25,12 +25,7 @@ public:
 	uint32 IncreaseDone : 1;
 
 
-	/** called when something enters the boxomponent */
 
-	virtual void OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) override;
-
-	/** called when something leaves the boxomponent component */
-	virtual void OnOverlapEnd(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex) override;
 
 	//used to check if the overlapping acctor is the correct resouce type
 	virtual bool CheckResourceType(TArray<AActor*> OtherActor);

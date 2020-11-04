@@ -14,13 +14,26 @@ class RTS_API AUnitController : public AAIController
 {
 	GENERATED_BODY()
 
-		virtual void Tick(float DeltaTime) override;
+	AUnitController();
+
+	virtual void Tick(float DeltaTime) override;
 
 	virtual void BeginPlay() override;
 	//called when the unitcontroller is posssesd
 	virtual void OnPossess(class APawn* InPawn) override;
 	//called when the unitcontroller UnPossess a unit
 	virtual void OnUnPossess() override;
+
+	virtual void CallMoveTo();
+
+	UPROPERTY(EditAnywhere)
+	uint32 MoveToStarted : 1;
+
+	UPROPERTY(EditAnywhere)
+	class UCrowdFollowingComponent* CrowdComponent;
+
+	UPROPERTY(EditAnywhere)
+	FVector PreMoveTarget;
 
 protected:
 	//poitner to Unit class

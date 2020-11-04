@@ -52,13 +52,7 @@ public:
 	class UWidget* Widget;
 	//
 
-	/** called when something enters the boxomponent */
-	UFUNCTION()
-	virtual void OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
-
-	/** called when something leaves the boxomponent component */
-	UFUNCTION()
-	virtual void OnOverlapEnd(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+	//Function to decide what to do when selected based on if it is placed or not
 	UFUNCTION()
 	virtual void OnSelected(AActor* Target, FKey ButtonPressed);
 	// use to set the intial start values
