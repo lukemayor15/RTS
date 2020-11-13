@@ -31,6 +31,8 @@ public:
 	UPROPERTY(EditAnywhere)
 	UStaticMeshComponent* StaticMesh;
 
+	UPROPERTY()
+	class ABaseEnemy* TargetedEnemy;
 
 	//selected bool
 	UPROPERTY(BlueprintReadOnly)
@@ -38,6 +40,9 @@ public:
 	//isMOving Bool
 	UPROPERTY(BlueprintReadOnly)
 	uint32 IsMoving : 1;
+	//ISAtttacking Bool
+	UPROPERTY(BlueprintReadOnly)
+	uint32 IsAttacking : 1;
 	//Move target Fvector
 	UPROPERTY(BlueprintReadOnly)
 	FVector MoveTarget;
@@ -66,6 +71,10 @@ public:
 	//Bluepprint implemented  function for move animation
 	UFUNCTION(BlueprintNativeEvent)
 	void MoveAnimation();
+
+	//Bluepirnt implemented function for attack animation
+	UFUNCTION(BlueprintNativeEvent)
+	void AttackAnimation();
 protected:
 	//Yaw speed
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Unit", meta = (CampMin = "0.0"))

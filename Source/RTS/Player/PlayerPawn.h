@@ -50,7 +50,10 @@ public:
 	//bool to check if the player is currently building
 	UPROPERTY(BlueprintReadWrite)
 	uint32 isBuilding : 1;
-	
+	//used to deterime is selected units should be attacking
+	UPROPERTY(BlueprintReadWrite)
+	uint32 IsAttacking : 1;
+
 	//values set in cameracontroller, used to move player
 	UPROPERTY(BlueprintReadOnly)
 	float AxisValueButtonX;
@@ -90,10 +93,18 @@ public:
 	void ReleasedLeftMouseButton();
 	//get mouse pos
 	UFUNCTION(BlueprintCallable)
-		FVector GetMousePos();
+	FVector GetMousePos();
 
 	//used to minus the players resoucres when spent
 	void MinusCost(int Gold, int Food, int Wood, int Stone);
+
+	//use a different movemnt method for when the selected unit is attacking.
+	void MoveToAttack(FHitResult RV_Hit);
+	//
+	TArray<FVector> GroupMovement();
+
+	TArray<FVector> GroupAttackMovement(FHitResult RV_Hit);
+
 
 
 };

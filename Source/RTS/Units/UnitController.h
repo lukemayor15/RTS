@@ -27,6 +27,8 @@ class RTS_API AUnitController : public AAIController
 
 	//Replacing the tick function to imporve performance
 	virtual void AITimer();
+
+	virtual void Attack();
 	//how often the AITimer function is called.
 	float TimerTime;
 
@@ -40,6 +42,10 @@ class RTS_API AUnitController : public AAIController
 	UPROPERTY(EditAnywhere)
 	uint32 MoveToStarted : 1;
 
+	//attack timer
+	UPROPERTY(EditAnywhere)
+	uint32 AttackStarted : 1;
+
 	//
 	UPROPERTY(EditAnywhere)
 	class UCrowdFollowingComponent* CrowdComponent;
@@ -50,6 +56,9 @@ class RTS_API AUnitController : public AAIController
 
 	/* Handle to manage the timer */
 	FTimerHandle MemberTimerHandle;
+
+	/* Handle to manage the timer */
+	FTimerHandle AttackTimerHandle;
 
 protected:
 	//poitner to Unit class

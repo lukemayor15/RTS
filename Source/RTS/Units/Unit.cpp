@@ -22,12 +22,14 @@ AUnit::AUnit()
 
 }
 
-// Called when the game starts or when spawned
+// Called when the game starts or when spawned and set intial values
 void AUnit::BeginPlay()
 {
 	Super::BeginPlay();
 	CurrentController = static_cast<AUnitController*>(GetController());
 	YawSpeed = 270.0f;
+	IsAttacking = false;
+	IsMoving = false;
 }
 
 // Called every frame
@@ -78,6 +80,12 @@ void AUnit::MoveAnimation_Implementation()
 {
 
 }
+//implmented in blueprints for animation
+void AUnit::AttackAnimation_Implementation()
+{
+
+}
+
 
 
 

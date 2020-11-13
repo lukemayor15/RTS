@@ -41,6 +41,8 @@ public:
 	//OnSelected function(When clicked on)
 	virtual void OnSelected(AActor* Target, FKey ButtonPressed) override;
 
+	virtual void Placing() override;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

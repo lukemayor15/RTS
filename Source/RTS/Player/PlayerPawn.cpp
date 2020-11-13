@@ -5,10 +5,13 @@
 #include "RTS\Buildings\BaseBuilding.h"
 #include "Kismet/GameplayStatics.h"
 #include "RTS\Units\Unit.h"
+#include "RTS\Units\Enemys\BaseEnemy.h"
 #include "RTSPlayerController.h"
 #include "RTS\Hud\RTSHUD.h"
 #include "Kismet/KismetArrayLibrary.h"
 #include "RTS\UserWidgets\CameraControl.h"
+#include "DrawDebugHelpers.h"
+
 
 
 
@@ -30,6 +33,7 @@ void APlayerPawn::MoveX(float AxisVal)
 	Pos.X += AxisVal;
 	SetActorLocation(Pos);
 }
+
 //used to move the player/camera on the Y axis
 void APlayerPawn::MoveY(float AxisVal)
 {
@@ -37,6 +41,7 @@ void APlayerPawn::MoveY(float AxisVal)
 	Pos.Y -= AxisVal;
 	SetActorLocation(Pos);
 }
+
 // Called when the game starts or when spawned
 void APlayerPawn::BeginPlay()
 {
@@ -47,6 +52,7 @@ void APlayerPawn::BeginPlay()
 	HudForSelectionBox = static_cast<ARTSHUD*>(CurrentController->GetHUD());
 	//
 	isBuilding = false;
+	IsAttacking = false;
 
 	//Generate the default building hud
 	HudForSelectionBox->CurrentWidget->GenereateButtons(HUDWidgetClass);
@@ -154,13 +160,37 @@ void APlayerPawn::AddUnit(AUnit* Unit)
 //
 void APlayerPawn::RightClickActions()
 {
+	FHitResult RV_Hit(ForceInit);
+	FCollisionQueryParams TraceParams;
+
 	//null pointer check
 	if (CurrentController != nullptr)
 	{
 		//if we have units in the player controller unit list we are wantinng to move them
-		if (CurrentController->UnitList.Num() >= 0)
+		if (CurrentController->UnitList.IsValidIndex(0))
 		{
-			MoveUnit();
+			FVector MousePos = GetMousePos();
+			
+			DrawDebugLine(GetWorld(), GetMousePos(), FVector(MousePos.X, MousePos.Y, 1000.0f), FColor::Green, true, 2.f, false, 4.f);
+
+			if (GetWorld()->LineTraceSingleByChannel(RV_Hit, MousePos, FVector(MousePos.X, MousePos.Y, 1000.0f), ECC_Pawn, TraceParams))
+			{
+				if (RV_Hit.Actor->IsA(ABaseEnemy::StaticClass()))
+				{
+					UE_LOG(LogTemp, Warning, TEXT("Enemy Selected"));
+					IsAttacking = true;
+				}
+
+			}
+			if (IsAttacking)
+			{
+				MoveToAttack(RV_Hit);
+			}
+			else
+			{
+				MoveUnit();
+			}
+			
 		}
 		//if we are currently building and there is a building selected we want to destroy that building and reset to isbuilding to false
 		if (CurrentController->BuildingList.Num() >= 0 && isBuilding)
@@ -170,6 +200,7 @@ void APlayerPawn::RightClickActions()
 			CurrentController->BuildingList.Empty();
 			isBuilding = false;
 		}
+
 	}
 
 }
@@ -177,11 +208,13 @@ void APlayerPawn::RightClickActions()
 //Used to move the selecteed units to a position
 void APlayerPawn::MoveUnit()
 {
+	TArray<FVector> CheckedMovementPoints;
 	//null pointer check
+	CheckedMovementPoints = GroupMovement();
 	if (CurrentController != nullptr)
 	{
 		//check if unitlist is not empty
-		if (CurrentController->UnitList.Num() >= 0)
+		if (CurrentController->UnitList.Num() >= 0 && CheckedMovementPoints.IsValidIndex(0))
 		{
 			//loop through all units selected and set to moving and their target location
 			for (int32 Index = 0; Index != CurrentController->UnitList.Num(); ++Index)
@@ -189,11 +222,51 @@ void APlayerPawn::MoveUnit()
 				//nullpointer check
 				if (CurrentController->UnitList[Index] != nullptr)
 				{
-					//Set move target to the mouse position
-					CurrentController->UnitList[Index]->MoveTarget = GetMousePos();
+					//Set move target to the corrsponding CheckedMovementPoints
+					CurrentController->UnitList[Index]->MoveTarget = CheckedMovementPoints[Index];
 					//set that they are moving
 					CurrentController->UnitList[Index]->IsMoving = true;
 					
+				}
+
+			}
+
+		}
+		//no units in unit list
+		UE_LOG(LogTemp, Warning, TEXT("Is empty"));
+	}
+}
+
+//Get it Working with one then work out group movement later, all need to keep updating the target move position, 
+//pass the hit results to the unit controller and it can update there.
+void APlayerPawn::MoveToAttack(FHitResult RV_Hit)
+{
+
+	if (CurrentController != nullptr)
+	{
+		TArray<FVector> CheckedMovementPoints;
+		CheckedMovementPoints = GroupAttackMovement(RV_Hit);
+
+		//check if unitlist is not empty
+		if (CurrentController->UnitList.IsValidIndex(0))
+		{
+			FVector OrginalMoveTarget;
+			OrginalMoveTarget = GetMousePos();
+			//loop through all units selected and set to moving and their target location
+			for (int32 Index = 0; Index != CurrentController->UnitList.Num(); ++Index)
+			{
+				//nullpointer check
+				if (CurrentController->UnitList[Index] != nullptr)
+				{
+
+					//Set move target to one of the CHeckedMovementpoints
+					CurrentController->UnitList[Index]->MoveTarget = CheckedMovementPoints[Index];
+					// minus the size of the unit 
+
+					//set that they are moving
+					CurrentController->UnitList[Index]->IsMoving = true;
+					CurrentController->UnitList[Index]->IsAttacking = true;
+					CurrentController->UnitList[Index]->TargetedEnemy = Cast<ABaseEnemy>(RV_Hit.Actor);
 
 				}
 
@@ -204,6 +277,308 @@ void APlayerPawn::MoveUnit()
 		UE_LOG(LogTemp, Warning, TEXT("Is empty"));
 	}
 
+	IsAttacking = false;
+}
+
+//Performs a very simlair task to group movment, but instead uses the enemy selected
+// may merge the two functions, but well be depent on readiabilty of it
+TArray<FVector> APlayerPawn::GroupAttackMovement(FHitResult RV_Hit)
+{
+	bool IncreaseRaduius = false;
+	int RadiusCheck = 0;
+	FHitResult TargetedEnemy = RV_Hit;
+
+	TArray<FVector> MovementPoints;
+	FVector EnemyPosition = RV_Hit.Actor->GetActorLocation();
+	EnemyPosition.Z = 0.0f;
+	FVector EnemyPosition2 = EnemyPosition;
+
+	FCollisionShape Shape;
+	Shape.SetSphere(40.0f);
+	float RadiusChangeAmount = 100.0f;
+
+
+		while (MovementPoints.Num() != CurrentController->UnitList.Num())
+		{
+			EnemyPosition2 = EnemyPosition;
+
+			switch (RadiusCheck)
+			{
+				//Check for above posistion is clear
+			case 0:
+				EnemyPosition2.X += RadiusChangeAmount;
+				DrawDebugSphere(GetWorld(), EnemyPosition2, Shape.GetSphereRadius(), 4, FColor::Green, true, 2.f, false, 4.f);
+				if (!GetWorld()->SweepSingleByChannel(RV_Hit, EnemyPosition2, FVector(EnemyPosition2.X, EnemyPosition2.Y, 1000.0f), FQuat(0.0f, 0.0f, 0.0f, 0.0f), ECC_Pawn, Shape))
+				{
+					MovementPoints.Push(EnemyPosition2);
+				}
+				RadiusCheck++;
+				break;
+				////Check for Bottom posistion is clear
+			case 1:
+				EnemyPosition2.X -= RadiusChangeAmount;
+				DrawDebugSphere(GetWorld(), EnemyPosition2, Shape.GetSphereRadius(), 4, FColor::Green, true, 2.f, false, 4.f);
+				if (!GetWorld()->SweepSingleByChannel(RV_Hit, EnemyPosition2, FVector(EnemyPosition2.X, EnemyPosition2.Y, 1000.0f), FQuat(0.0f, 0.0f, 0.0f, 0.0f), ECC_Pawn, Shape))
+				{
+					MovementPoints.Push(EnemyPosition2);
+				}
+				RadiusCheck++;
+				break;
+				////Check for right posistion is clear
+			case 2:
+				EnemyPosition2.Y += RadiusChangeAmount;
+				DrawDebugSphere(GetWorld(), EnemyPosition2, Shape.GetSphereRadius(), 4, FColor::Green, true, 2.f, false, 4.f);
+				if (!GetWorld()->SweepSingleByChannel(RV_Hit, EnemyPosition2, FVector(EnemyPosition2.X, EnemyPosition2.Y, 1000.0f), FQuat(0.0f, 0.0f, 0.0f, 0.0f), ECC_Pawn, Shape))
+				{
+					MovementPoints.Push(EnemyPosition2);
+
+				}
+				RadiusCheck++;
+				break;
+				////Check for Left posistion is clear
+			case 3:
+				EnemyPosition2.Y -= RadiusChangeAmount;
+
+				DrawDebugSphere(GetWorld(), EnemyPosition2, Shape.GetSphereRadius(), 4, FColor::Green, true, 2.f, false, 4.f);
+				if (!GetWorld()->SweepSingleByChannel(RV_Hit, EnemyPosition2, FVector(EnemyPosition2.X, EnemyPosition2.Y, 1000.0f), FQuat(0.0f, 0.0f, 0.0f, 0.0f), ECC_Pawn, Shape))
+				{
+					MovementPoints.Push(EnemyPosition2);
+
+				}
+				RadiusCheck++;
+				break;
+				////Check for Top Right posistion is clear
+
+			case 4:
+				EnemyPosition2.X += RadiusChangeAmount;
+				EnemyPosition2.Y -= RadiusChangeAmount;
+
+
+				DrawDebugSphere(GetWorld(), EnemyPosition2, Shape.GetSphereRadius(), 4, FColor::Green, true, 2.f, false, 4.f);
+				if (!GetWorld()->SweepSingleByChannel(RV_Hit, EnemyPosition2, FVector(EnemyPosition2.X, EnemyPosition2.Y, 1000.0f), FQuat(0.0f, 0.0f, 0.0f, 0.0f), ECC_Pawn, Shape))
+				{
+					MovementPoints.Push(EnemyPosition2);
+
+				}
+				RadiusCheck++;
+				break;
+
+				////Check for Top Left posistion is clear
+			case 5:
+				EnemyPosition2.X += RadiusChangeAmount;
+				EnemyPosition2.Y += RadiusChangeAmount;
+
+				DrawDebugSphere(GetWorld(), EnemyPosition2, Shape.GetSphereRadius(), 4, FColor::Green, true, 2.f, false, 4.f);
+				if (!GetWorld()->SweepSingleByChannel(RV_Hit, EnemyPosition2, FVector(EnemyPosition2.X, EnemyPosition2.Y, 1000.0f), FQuat(0.0f, 0.0f, 0.0f, 0.0f), ECC_Pawn, Shape))
+				{
+					MovementPoints.Push(EnemyPosition2);
+
+				}
+				RadiusCheck++;
+				break;
+				////Check for Bottom Left posistion is clear
+			case 6:
+				EnemyPosition2.X -= RadiusChangeAmount;
+				EnemyPosition2.Y -= RadiusChangeAmount;
+
+				DrawDebugSphere(GetWorld(), EnemyPosition2, Shape.GetSphereRadius(), 4, FColor::Green, true, 2.f, false, 4.f);
+				if (!GetWorld()->SweepSingleByChannel(RV_Hit, EnemyPosition2, FVector(EnemyPosition2.X, EnemyPosition2.Y, 1000.0f), FQuat(0.0f, 0.0f, 0.0f, 0.0f), ECC_Pawn, Shape))
+				{
+					MovementPoints.Push(EnemyPosition2);
+
+				}
+				RadiusCheck++;
+				break;
+			case 7:
+				EnemyPosition2.X -= RadiusChangeAmount;
+				EnemyPosition2.Y += RadiusChangeAmount;
+
+				DrawDebugSphere(GetWorld(), EnemyPosition2, Shape.GetSphereRadius(), 4, FColor::Green, true, 2.f, false, 4.f);
+				if (!GetWorld()->SweepSingleByChannel(RV_Hit, EnemyPosition2, FVector(EnemyPosition2.X, EnemyPosition2.Y, 1000.0f), FQuat(0.0f, 0.0f, 0.0f, 0.0f), ECC_Pawn, Shape))
+				{
+					MovementPoints.Push(EnemyPosition2);
+
+				}
+				RadiusCheck++;
+				break;
+
+			case 8:
+				RadiusCheck = 0;
+				RadiusChangeAmount += RadiusChangeAmount;
+				break;
+
+
+			default:
+				break;
+			}
+
+		}
+
+	return MovementPoints;
+}
+//make make in own function that takes permaters so isntead of two fundtions that simlair just one
+TArray<FVector> APlayerPawn::GroupMovement()
+{
+	// do we need to increase the radius check
+	bool IncreaseRaduius = false;
+	//int to count how many radius checks have been made, after 8 it increase the radius
+	int RadiusCheck = 0;
+
+
+	//FVector Tarray , use to store location of the move points
+	TArray<FVector> MovementPoints;
+	//get the mouse position
+	FVector MousePosition = GetMousePos();
+	//set z to 0 as we can ingore that value
+	MousePosition.Z = 0.0f;
+	//Second mouse position set it to the , mouse position
+	FVector MousePosition2 = MousePosition;
+	//Re-initialize hit info
+	FHitResult RV_Hit(ForceInit);
+	//Coolision shape info
+	FCollisionShape Shape;
+	Shape.SetSphere(80.0f);
+	//float for raduous change amount
+	float RadiusChangeAmount = 170.0f;
+	
+	//Draw a debug sphere
+	DrawDebugSphere(GetWorld(), MousePosition, Shape.GetSphereRadius(), 4, FColor::Green, true, 2.f, false, 4.f);
+	//cCreate a sweep single by chaneel to check if the mouse position is empty, no overlapping actors
+	if(!GetWorld()->SweepSingleByChannel(RV_Hit, MousePosition, FVector(MousePosition.X, MousePosition.Y, 1000.0f), FQuat(0.0f, 0.0f, 0.0f, 0.0f), ECC_Pawn, Shape))
+	{
+		//if no actors are hit we can move there
+		UE_LOG(LogTemp, Warning, TEXT("No Trace Hit"));
+		//add the position that has no overlaps to movementPoints
+		MovementPoints.Push(MousePosition);
+
+		//Until we have enough movement pointw for the amount of unit selected, keep checking
+		while(MovementPoints.Num() != CurrentController->UnitList.Num())
+		{
+			//reset mouse2 position to orginal mouse position
+			MousePosition2 = MousePosition;
+
+			//Check whuch move position we checking
+			switch (RadiusCheck)
+			{
+			//Check for above posistion is clear
+			case 0:
+				// add the radious change amount to  the X pos
+				MousePosition2.X += RadiusChangeAmount;
+				//create a debug sphere and check if there an overlap in that position
+				DrawDebugSphere(GetWorld(), MousePosition2, Shape.GetSphereRadius(), 4, FColor::Green, true, 2.f, false, 4.f);
+				if (!GetWorld()->SweepSingleByChannel(RV_Hit, MousePosition2, FVector(MousePosition2.X, MousePosition2.Y, 1000.0f), FQuat(0.0f, 0.0f, 0.0f, 0.0f), ECC_Pawn, Shape))
+				{
+					//if no overlap that means it clear and push the mouse position 2 to movement points
+					MovementPoints.Push(MousePosition2);
+				}
+				RadiusCheck++;
+				break;
+				////Check for Bottom posistion is clear
+			case 1:
+				MousePosition2.X -= RadiusChangeAmount;
+				//create a debug sphere and check if there an overlap in that position
+				DrawDebugSphere(GetWorld(), MousePosition2, Shape.GetSphereRadius(), 4, FColor::Green, true, 2.f, false, 4.f);
+				if (!GetWorld()->SweepSingleByChannel(RV_Hit, MousePosition2, FVector(MousePosition2.X, MousePosition2.Y, 1000.0f), FQuat(0.0f, 0.0f, 0.0f, 0.0f), ECC_Pawn, Shape))
+				{
+					//if no overlap that means it clear and push the mouse position 2 to movement points
+					MovementPoints.Push(MousePosition2);
+				}
+				RadiusCheck++;
+				break;
+				////Check for right posistion is clear
+			case 2:
+				MousePosition2.Y += RadiusChangeAmount;
+				//create a debug sphere and check if there an overlap in that position
+				DrawDebugSphere(GetWorld(), MousePosition2, Shape.GetSphereRadius(), 4, FColor::Green, true, 2.f, false, 4.f);
+				if (!GetWorld()->SweepSingleByChannel(RV_Hit, MousePosition2, FVector(MousePosition2.X, MousePosition2.Y, 1000.0f), FQuat(0.0f, 0.0f, 0.0f, 0.0f), ECC_Pawn, Shape))
+				{
+					//if no overlap that means it clear and push the mouse position 2 to movement points
+					MovementPoints.Push(MousePosition2);
+				}
+				RadiusCheck++;
+				break;
+				////Check for Left posistion is clear
+			case 3:
+				MousePosition2.Y -= RadiusChangeAmount;
+				//create a debug sphere and check if there an overlap in that position
+				DrawDebugSphere(GetWorld(), MousePosition2, Shape.GetSphereRadius(), 4, FColor::Green, true, 2.f, false, 4.f);
+				if (!GetWorld()->SweepSingleByChannel(RV_Hit, MousePosition2, FVector(MousePosition2.X, MousePosition2.Y, 1000.0f), FQuat(0.0f, 0.0f, 0.0f, 0.0f), ECC_Pawn, Shape))
+				{
+					//if no overlap that means it clear and push the mouse position 2 to movement points
+					MovementPoints.Push(MousePosition2);
+				}
+				RadiusCheck++;
+				break;
+				////Check for Top Right posistion is clear
+			case 4:
+				MousePosition2.X += RadiusChangeAmount;
+				MousePosition2.Y -= RadiusChangeAmount;
+
+				//create a debug sphere and check if there an overlap in that position
+				DrawDebugSphere(GetWorld(), MousePosition2, Shape.GetSphereRadius(), 4, FColor::Green, true, 2.f, false, 4.f);
+				if (!GetWorld()->SweepSingleByChannel(RV_Hit, MousePosition2, FVector(MousePosition2.X, MousePosition2.Y, 1000.0f), FQuat(0.0f, 0.0f, 0.0f, 0.0f), ECC_Pawn, Shape))
+				{
+					//if no overlap that means it clear and push the mouse position 2 to movement points
+					MovementPoints.Push(MousePosition2);
+				}
+				RadiusCheck++;
+				break;
+
+				////Check for Top Left posistion is clear
+			case 5:
+				MousePosition2.X += RadiusChangeAmount;
+				MousePosition2.Y += RadiusChangeAmount;
+				//create a debug sphere and check if there an overlap in that position
+				DrawDebugSphere(GetWorld(), MousePosition2, Shape.GetSphereRadius(), 4, FColor::Green, true, 2.f, false, 4.f);
+				if (!GetWorld()->SweepSingleByChannel(RV_Hit, MousePosition2, FVector(MousePosition2.X, MousePosition2.Y, 1000.0f), FQuat(0.0f, 0.0f, 0.0f, 0.0f), ECC_Pawn, Shape))
+				{
+					//if no overlap that means it clear and push the mouse position 2 to movement points
+					MovementPoints.Push(MousePosition2);
+				}
+				RadiusCheck++;
+				break;
+				////Check for Bottom Left posistion is clear
+			case 6:
+				MousePosition2.X -= RadiusChangeAmount;
+				MousePosition2.Y -= RadiusChangeAmount;
+				//create a debug sphere and check if there an overlap in that position
+				DrawDebugSphere(GetWorld(), MousePosition2, Shape.GetSphereRadius(), 4, FColor::Green, true, 2.f, false, 4.f);
+				if (!GetWorld()->SweepSingleByChannel(RV_Hit, MousePosition2, FVector(MousePosition2.X, MousePosition2.Y, 1000.0f), FQuat(0.0f, 0.0f, 0.0f, 0.0f), ECC_Pawn, Shape))
+				{
+					//if no overlap that means it clear and push the mouse position 2 to movement points
+					MovementPoints.Push(MousePosition2);
+				}
+				RadiusCheck++;
+				break;
+			case 7:
+				MousePosition2.X -= RadiusChangeAmount;
+				MousePosition2.Y += RadiusChangeAmount;
+
+				//create a debug sphere and check if there an overlap in that position
+				DrawDebugSphere(GetWorld(), MousePosition2, Shape.GetSphereRadius(), 4, FColor::Green, true, 2.f, false, 4.f);
+				if (!GetWorld()->SweepSingleByChannel(RV_Hit, MousePosition2, FVector(MousePosition2.X, MousePosition2.Y, 1000.0f), FQuat(0.0f, 0.0f, 0.0f, 0.0f), ECC_Pawn, Shape))
+				{
+					//if no overlap that means it clear and push the mouse position 2 to movement points
+					MovementPoints.Push(MousePosition2);
+				}
+				RadiusCheck++;
+				break;
+				// if we have check all move position, increase the radius and set radious check to 0
+				//check again with an increase radius
+			case 8:
+				RadiusCheck = 0;
+				RadiusChangeAmount += RadiusChangeAmount;
+				break;
+
+			default:
+				break;
+			}
+			
+		}
+	}
+
+	//return MovementPoints
+	return MovementPoints;
 }
 // minus the resource that are being used to build units/buildings
 void APlayerPawn::MinusCost(int Gold, int Food, int Wood, int Stone)
@@ -230,6 +605,7 @@ void APlayerPawn::Select()
 			{
 				//set the building isPlaced to true,
 				CurrentController->BuildingList[0]->IsPlaced = true;
+				CurrentController->BuildingList[0]->Placing();
 				//take away the resoruce cost of this building, check to see if we have enough resouce is else where
 				MinusCost(CurrentController->BuildingList[0]->GoldCost, CurrentController->BuildingList[0]->FoodCost, CurrentController->BuildingList[0]->WoodCost, CurrentController->BuildingList[0]->StoneCost);
 				//Update the resource Hud
@@ -336,8 +712,6 @@ void APlayerPawn::ReleasedLeftMouseButton()
 		HudForSelectionBox->Reset();
 		MultiSelect = false;
 	}
-
-
 }
 
 //get the mouse position

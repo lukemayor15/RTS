@@ -5,10 +5,13 @@
 #include "Unit.h"
 #include "NavMesh/NavMeshBoundsVolume.h"
 #include "Navigation/CrowdFollowingComponent.h"
+#include "RTS\Units\Enemys\BaseEnemy.h"
+
 
 
 AUnitController::AUnitController()
 {
+	//intialse values for the UCrowdFollowingComponent
 	CrowdComponent = CreateDefaultSubobject<UCrowdFollowingComponent>(TEXT("CrowdFollowingComponent"));
 
 	CrowdComponent->SetCrowdSimulationState(ECrowdSimulationState::Enabled);
@@ -32,8 +35,9 @@ AUnitController::AUnitController()
 void AUnitController::BeginPlay()
 {
 	Super::BeginPlay();
+	//Set the timer time
 	TimerTime = 0.33f;
-
+	// start a timer for the unit AI update instead of using event tick
 	GetWorldTimerManager().SetTimer(MemberTimerHandle, this, &AUnitController::AITimer, TimerTime, true, 0.0f);
 	MoveToStarted = false;
 	
@@ -44,7 +48,7 @@ void AUnitController::Tick(float DeltaTime)
 {
 	if (PawnAsUnit)
 	{
-		//Check is pawn is Moving
+		//Check is pawn is Moving, 
 		if (PawnAsUnit->IsMoving)
 		{
 			//Get direction to target
@@ -89,7 +93,8 @@ void AUnitController::AITimer()
 			//first minus the two, then called the size functino witch returns the length of the vector
 			FVector InRangeCheck = PawnAsUnit->MoveTarget - ActorLoc;
 			int vectorLength = InRangeCheck.Size();
-			if (vectorLength > 20.0f && vectorLength > 20.0f)
+			//change from magic numbers, and split up into attacking move and not attacking move
+			if (vectorLength > 160.0f && vectorLength > 160.0f)
 			{
 				//set the unit animation move
 				PawnAsUnit->MoveAnimation();
@@ -102,24 +107,74 @@ void AUnitController::AITimer()
 			//If we done moving 
 			else
 			{
-				//set the unit animation to idle
-				//set the unit ISmoving to false and the controller moveToStarted to false
-				PawnAsUnit->IdleAnimation();
-				PawnAsUnit->IsMoving = false;
-				MoveToStarted = false;
+				//Check if the unit is attacking and if the targetenemy is not null
+				if (PawnAsUnit->IsAttacking && PawnAsUnit->TargetedEnemy != nullptr && AttackStarted == false)
+				{
+					//set attack started to true
+					AttackStarted = true;
+					//create a timer that runs the same time as it animation, to attack the selected targeted
+					GetWorldTimerManager().SetTimer(AttackTimerHandle, this, &AUnitController::Attack, 2.33f, true, 0.0f);
+				}
+				else
+				{
+					//set the unit animation to idle
+					//set the unit ISmoving to false and the controller moveToStarted to false
+					PawnAsUnit->IdleAnimation();
+					PawnAsUnit->IsMoving = false;
+					MoveToStarted = false;
+				}
+
+				// add in attack function to attack the enemy one the destination is reached, 		
 			}
 		}
 	}
+}
+
+//Attack function
+void AUnitController::Attack()
+{
+	//check for nullptr
+	if (PawnAsUnit != nullptr)
+	{
+		//check for nullptr
+		if (PawnAsUnit->TargetedEnemy != nullptr)
+		{
+			//set the attack animation and called take damage fuincion from the enemy.
+			PawnAsUnit->AttackAnimation();
+			PawnAsUnit->TargetedEnemy->TakeDamage(10);
+		}
+		//if targeted enemy is null, it means it is destroyed
+		//reset the values of the unit to be idle
+		else
+		{
+			PawnAsUnit->IsAttacking = false;
+			PawnAsUnit->IsMoving = false;
+			PawnAsUnit->IdleAnimation();
+			GetWorldTimerManager().ClearTimer(AttackTimerHandle);
+			AttackStarted = false;
+
+		}
+	}
+	
+
 }
 
 void AUnitController::CallMoveTo()
 {
 	if (PawnAsUnit != nullptr)
 	{
-		//Move to movetarget
-		MoveToLocation(PawnAsUnit->MoveTarget, 20.0f, false, true, true, false,0,false);
-		//we have started to Move
-		MoveToStarted = true;
+		if (PawnAsUnit->IsAttacking == true)
+		{
+			MoveToLocation(PawnAsUnit->MoveTarget, 40.0f, false, true, true, false, 0, false);
+		}
+		else
+		{
+			//Move to movetarget
+			MoveToLocation(PawnAsUnit->MoveTarget, 40.0f, false, true, true, false, 0, false);
+			//we have started to Move
+			MoveToStarted = true;
+		}
+		
 	}
 	//set the PreMoveTarget to new MoveTarget
 	PreMoveTarget = PawnAsUnit->MoveTarget;

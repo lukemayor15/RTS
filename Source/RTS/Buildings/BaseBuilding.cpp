@@ -41,9 +41,8 @@ void ABaseBuilding::OnSelected(AActor* Target, FKey ButtonPressed)
 	//if can be placed and is not placed
 	else if (CanBePlaced && !IsPlaced)
 	{
-		//Chnage IsPlaced to true and change collision of the static mesh to block
-		IsPlaced = true;
-		StaticMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
+		//Called placing function,this sets the building as placed.
+		Placing();
 	}
 
 
@@ -61,7 +60,7 @@ void ABaseBuilding::AddToList()
 	// Check for null pointer
 	if (HUDWidgetClass != nullptr)
 	{
-
+		//create the buttons base on the building when selected
 		PlayerAsPawn->HudForSelectionBox->CurrentWidget->GenereateButtons(HUDWidgetClass);
 	}
 	//if the building is not already in the building list, 
@@ -86,23 +85,47 @@ void ABaseBuilding::AddToList()
 void ABaseBuilding::BeginPlay()
 {
 	Super::BeginPlay();
+	//get the player object
 	PlayerAsPawn = static_cast<APlayerPawn*>(GetWorld()->GetFirstPlayerController()->GetPawn());
+	//Initilate bool values set to false
 	IsPlaced = false;
 	Selected = false;
 	CanBePlaced = false;
+	// set up OnCliked to this building, when the building left clicked on call the OnSelect function
 	OnClicked.AddDynamic(this, &ABaseBuilding::OnSelected);									  //set up a Oncliked to call the OnSelected function to determine if building or slected
+	//Check for overlapping actors
 	GetOverlapedActors();
+	//Set the start values of building for example health and wood cost
 	SetStartValues();
+
+	//Create a timer instead of using event tick to check for overlapped actors
+	GetWorldTimerManager().SetTimer(BuildingMemberTimerHandle, this, &ABaseBuilding::BuildingTimerFunction, 0.33f, true, 0.0f);
+}
+
+void ABaseBuilding::BuildingTimerFunction()
+{
+	//Checks for overlaped actors
+	GetOverlapedActors();
+}
+
+//change values so the building is placed/built
+void ABaseBuilding::Placing()
+{
+	//change IsPlaced to true and change collision of the static mesh to block
+	IsPlaced = true;
+	StaticMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
+	//Clear the building timer as it already built so dont need to check .
+	GetWorldTimerManager().ClearTimer(BuildingMemberTimerHandle);
 }
 
 // Called every frame
 void ABaseBuilding::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	//Updates the position of the actor same as the mouse while it isnt placed/built
 	if (!IsPlaced)
 	{
 		SetActorLocation(PlayerAsPawn->GetMousePos());
-		GetOverlapedActors();
 	}
 }
 
@@ -120,15 +143,17 @@ void ABaseBuilding::GetOverlapedActors()
 	TArray<AActor*> OverlapedActors;
 	GetOverlappingActors(OverlapedActors, TSubclassOf <AActor>());
 
-
+	// cgeck for any overlaping actor
 	if (OverlapedActors.Num() == 0)
 	{
+		// no overlap actor set can be place to true
 		CanBePlaced = true;
 		UE_LOG(LogTemp, Warning, TEXT(" No overlaps"));
 
 	}
 	else
-	{
+	{ 
+		//otherwise set can be placed to be false
 		CanBePlaced = false;
 		UE_LOG(LogTemp, Warning, TEXT(" Overlaps"));
 

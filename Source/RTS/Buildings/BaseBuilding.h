@@ -62,8 +62,20 @@ public:
 	UFUNCTION()
 	void AddToList();
 
+	//Called by a lopped timer
+	UFUNCTION()
+	void BuildingTimerFunction();
+
+	UFUNCTION()
+	virtual void Placing();
+
 	/* Handle to manage the timer */
 	FTimerHandle MemberTimerHandle;
+
+	/* Handle to manage the timer when is building */
+	FTimerHandle BuildingMemberTimerHandle;
+
+
 	//Standard Values
 	UPROPERTY(BlueprintReadWrite)
 	int32 Health;
