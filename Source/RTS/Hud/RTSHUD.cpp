@@ -50,7 +50,7 @@ void ARTSHUD::BeginPlay()
 //used to draw a select box for the seelction of units and buildings
 void ARTSHUD::DrawSelectionBox(TArray<AUnit*> SelectList, FVector2D FirstMousePos, FVector2D SecondMousePos)
 {
-	GetActorsInSelectionRectangle(FirstMousePos, SecondMousePos, SelectList);
+	GetActorsInSelectionRectangle(FirstMousePos, SecondMousePos, SelectList, false);
 	//get diffrence between firstmouse and second mouse and use that 
 
 	//Draw the selection box

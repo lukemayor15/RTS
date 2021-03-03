@@ -82,7 +82,7 @@ public:
 	//used to detimermine what the right click should do 
 	void RightClickActions();
 	//Move select unit to location on tight mouse button
-	void MoveUnit();
+	void MoveUnit(FHitResult RV_Hit);
 	//on left mouse clicked this function is called to decide what to do
 	void Select();
 	//empty the array of player units, called on miss hit
@@ -101,10 +101,10 @@ public:
 	//use a different movemnt method for when the selected unit is attacking.
 	void MoveToAttack(FHitResult RV_Hit);
 	//
-	TArray<FVector> GroupMovement();
+	TArray<FVector> GroupMovement(FHitResult RV_Hit, float RadiusChangeAmount, float SphereRadius, FVector Position, bool Attacking);
 
 	TArray<FVector> GroupAttackMovement(FHitResult RV_Hit);
 
-
+	class UFunctionLibrary* FunctionLibray;
 
 };

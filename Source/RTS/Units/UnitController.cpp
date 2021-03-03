@@ -85,6 +85,7 @@ void AUnitController::AITimer()
 		//Check is pawn is Moving
 		if (PawnAsUnit->IsMoving)
 		{
+			
 			//Have we reach the move target
 			FVector ActorLoc = PawnAsUnit->GetActorLocation();
 			ActorLoc.Z = 0.0f;
@@ -93,8 +94,16 @@ void AUnitController::AITimer()
 			//first minus the two, then called the size functino witch returns the length of the vector
 			FVector InRangeCheck = PawnAsUnit->MoveTarget - ActorLoc;
 			int vectorLength = InRangeCheck.Size();
+
+
+			if (PawnAsUnit->IsAttacking == true && PawnAsUnit->MoveTarget != PawnAsUnit->TargetedEnemy->GetActorLocation())
+			{
+
+				PawnAsUnit->CheckMovementPositionChangeAttack();
+			}
+			
 			//change from magic numbers, and split up into attacking move and not attacking move
-			if (vectorLength > 160.0f && vectorLength > 160.0f)
+			if (vectorLength > 40.0f && PawnAsUnit->IsAttacking == false || vectorLength > 140.0f && PawnAsUnit->IsAttacking == true)
 			{
 				//set the unit animation move
 				PawnAsUnit->MoveAnimation();
@@ -115,18 +124,21 @@ void AUnitController::AITimer()
 					//create a timer that runs the same time as it animation, to attack the selected targeted
 					GetWorldTimerManager().SetTimer(AttackTimerHandle, this, &AUnitController::Attack, 2.33f, true, 0.0f);
 				}
-				else
+				else if(PawnAsUnit->IsAttacking == false)
 				{
 					//set the unit animation to idle
 					//set the unit ISmoving to false and the controller moveToStarted to false
 					PawnAsUnit->IdleAnimation();
 					PawnAsUnit->IsMoving = false;
 					MoveToStarted = false;
+					
 				}
 
 				// add in attack function to attack the enemy one the destination is reached, 		
 			}
+			PawnAsUnit->CheckOverlap();
 		}
+		
 	}
 }
 
@@ -147,16 +159,19 @@ void AUnitController::Attack()
 		//reset the values of the unit to be idle
 		else
 		{
-			PawnAsUnit->IsAttacking = false;
-			PawnAsUnit->IsMoving = false;
-			PawnAsUnit->IdleAnimation();
-			GetWorldTimerManager().ClearTimer(AttackTimerHandle);
-			AttackStarted = false;
+			StopAttack();
 
 		}
 	}
-	
+}
 
+void AUnitController::StopAttack()
+{
+	PawnAsUnit->IsAttacking = false;
+	PawnAsUnit->IdleAnimation();
+	GetWorldTimerManager().ClearTimer(AttackTimerHandle);
+	AttackStarted = false;
+	PawnAsUnit->CheckOverlap();
 }
 
 void AUnitController::CallMoveTo()
@@ -166,6 +181,8 @@ void AUnitController::CallMoveTo()
 		if (PawnAsUnit->IsAttacking == true)
 		{
 			MoveToLocation(PawnAsUnit->MoveTarget, 40.0f, false, true, true, false, 0, false);
+			//we have started to Move
+			MoveToStarted = true;
 		}
 		else
 		{

@@ -28,6 +28,10 @@ public:
 	//array that holds the units that are selected by the selection rect, then is checked again the UnitList for changes,
 	UPROPERTY(BlueprintReadOnly)
 	TArray<AUnit*> SelectList;
+
+	//array of units that are attacking without a command
+	UPROPERTY(BlueprintReadOnly)
+	TArray<AUnit*> AttackUnitList;
 	//an Object array to determine which objects can be selected
 	UPROPERTY(BlueprintReadOnly)
 	TArray< TEnumAsByte<EObjectTypeQuery> > ObjectTypes;

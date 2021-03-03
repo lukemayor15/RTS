@@ -29,11 +29,14 @@ class RTS_API AUnitController : public AAIController
 	virtual void AITimer();
 
 	virtual void Attack();
+	
 	//how often the AITimer function is called.
 	float TimerTime;
 
 	//offset value allowed betwen unit and targeted posistion
 	float UnitOffset;
+
+	void CheckMovementChange();
 
 	//Set the actor to move to move target
 	virtual void CallMoveTo();
@@ -64,4 +67,7 @@ protected:
 	//poitner to Unit class
 	UPROPERTY(BlueprintReadOnly, Category = "Unit")
 		class 	AUnit* PawnAsUnit;
+
+public:
+	void StopAttack();
 };

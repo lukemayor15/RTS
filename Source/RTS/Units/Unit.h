@@ -30,6 +30,8 @@ public:
 	//pointer to staticmeshcomponet
 	UPROPERTY(EditAnywhere)
 	UStaticMeshComponent* StaticMesh;
+	UPROPERTY(EditAnywhere)
+	class USphereComponent* AttackRadius;
 
 	UPROPERTY()
 	class ABaseEnemy* TargetedEnemy;
@@ -64,6 +66,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Pawm|Input", meta = (Keywords = "AddInput"))
 		virtual void AddRotationInput(float DeltaYawDegrees);
 
+	void CallStopAttack();
+
 	
 	//Bluepprint implemented  function for idel animation
 	UFUNCTION(BlueprintNativeEvent)
@@ -75,6 +79,19 @@ public:
 	//Bluepirnt implemented function for attack animation
 	UFUNCTION(BlueprintNativeEvent)
 	void AttackAnimation();
+
+	class APlayerPawn* PlayerAsPawn;
+
+
+	void AttackRadiusCheck();
+
+	void CheckMovementPositionChange();
+	void CheckMovementPositionChangeAttack();
+
+	FVector PreMovePositon;
+	UFUNCTION()
+	void CheckOverlap();
+
 protected:
 	//Yaw speed
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Unit", meta = (CampMin = "0.0"))

@@ -22,7 +22,7 @@ void ABaseResourceBuilding::BeginPlay()
 	IncreaseDone = false;
       // set up a notification for when this component overlaps something
 	OnClicked.AddDynamic(this, &ABaseBuilding::OnSelected);
-
+	//BoxCollision->bDynamicObstacle = false;
 	//the default increase for adding resources
 	IncreaseTime = 10.0f;
 	//set the resource increase amount
@@ -76,7 +76,7 @@ void ABaseResourceBuilding::Placing()
 {
 	//change the collision so that it other building and units and overlap it
 	StaticMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
-
+	BoxCollision->bDynamicObstacle = true;
 	//Clear time to check for overllaping actors as it is no longer needed
 	GetWorldTimerManager().ClearTimer(BuildingMemberTimerHandle);
 	// start the resource timer, peridocally increase the player resource
